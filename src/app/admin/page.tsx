@@ -72,7 +72,7 @@ export default function AdminDashboard() {
     if (error) {
       setMessage(`❌ Erro: ${error.message}`);
     } else {
-      setMessage("Product cadastrado com sucesso!");
+      setMessage("Produto cadastrado com sucesso!");
       setName("");
       setDescription("");
       setPrice("");
@@ -157,7 +157,7 @@ export default function AdminDashboard() {
                 <div key={product.id} className="flex items-center justify-between bg-neutral-950 p-4 rounded-xl border border-neutral-800/60">
                   <div className="flex items-center space-x-4">
                     <div className="w-12 h-12 bg-neutral-900 rounded-lg overflow-hidden p-2 flex items-center justify-center border border-neutral-800">
-                      <img src={product.image_url || "/images/beats-main.png"} alt="" className="object-contain max-h-full" />
+                      <img src={product.image_url || "/images/beats-main.png"} alt={product.name || "Imagem do produto"} className="object-contain max-h-full" />
                     </div>
                     <div>
                       <h3 className="font-bold text-sm text-neutral-100">{product.name}</h3>
