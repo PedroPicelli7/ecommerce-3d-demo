@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import ProductCanvas from "../components/3d/ProductCanvas";
 import { useCart } from "../context/CartContext";
 import productsData from "../data/products.json";
 
@@ -38,12 +39,10 @@ export default function Home() {
         </div>
 
         {/* Container para o Modelo 3D Interativo */}
-        <div className="w-full md:w-1/2 h-[450px] bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-center relative overflow-hidden shadow-inner">
-          <div className="text-center space-y-2">
-            <p className="text-sm font-medium text-slate-400">⚡ O fone 3D interativo será renderizado aqui</p>
-            <p className="text-xs text-slate-300">Carregando canvas WebGL...</p>
-          </div>
-        </div>
+        {/* Container para o Modelo 3D Interativo */}
+<div className="w-full md:w-1/2 h-[450px] bg-transparent flex items-center justify-center relative overflow-hidden">
+  <ProductCanvas />
+</div>
       </section>
 
       {/* Grid de Categorias (Inspirado na imagem download.jpg) */}
