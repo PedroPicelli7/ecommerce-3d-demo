@@ -9,7 +9,7 @@ function Model() {
   const { scene } = useGLTF("/models/headphone.glb");
   
   // Voltamos para o original! Ajuste apenas a escala se achar que ele ficou gigante
-  return <primitive object={scene} scale={1.2} />;
+  return <primitive object={scene} scale={1.05} />;
 }
 
 export default function ProductCanvas() {

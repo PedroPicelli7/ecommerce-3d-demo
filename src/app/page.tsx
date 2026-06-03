@@ -38,9 +38,8 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Container para o Modelo 3D Interativo */}
-        {/* Container para o Modelo 3D Interativo */}
-<div className="w-full md:w-1/2 h-[450px] bg-transparent flex items-center justify-center relative overflow-hidden">
+       {/* Container para o Modelo 3D Interativo */}
+<div className="w-full md:w-1/2 h-[520px] bg-transparent flex items-center justify-center relative">
   <ProductCanvas />
 </div>
       </section>
