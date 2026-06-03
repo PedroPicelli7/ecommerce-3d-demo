@@ -1,0 +1,29 @@
+[
+  {
+    "id": "1",
+    "name": "Beats Solo Wireless",
+    "price": 1490.00,
+    "description": "Fone de ouvido premium com cancelamento de ruído ativo e som imersivo.",
+    "category": "Headphones",
+    "image": "/images/beats-main.png",
+    "has3D": true
+  },
+  {
+    "id": "2",
+    "name": "Gaming Console PS5 Slim",
+    "price": 3799.00,
+    "description": "Experimente o carregamento relâmpago com um SSD de altíssima velocidade.",
+    "category": "Consoles",
+    "image": "/images/ps5.png",
+    "has3D": false
+  },
+  {
+    "id": "3",
+    "name": "MacBook Pro M3",
+    "price": 12499.00,
+    "description": "O notebook definitivo para desenvolvedores e criadores de conteúdo.",
+    "category": "Laptops",
+    "image": "/images/macbook.png",
+    "has3D": false
+  }
+]
