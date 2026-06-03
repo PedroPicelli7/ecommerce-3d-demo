@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import productsData from "../../../data/products.json";
+import { supabase } from "../../../lib/supabase";
 
-// Definição do formato que a API espera receber do front-end
 interface CheckoutBodyItem {
   id: string;
   quantity: number;
@@ -18,50 +17,86 @@ export async function POST(request: Request) {
       );
     }
 
+    // 1. Coletar todos os IDs que vieram do carrinho do cliente
+    const productIds = body.map((item) => item.id);
+
+    // 2. BUSCA NO BANCO DE DADOS: Puxa os dados reais direto do Supabase
+    const { data: produtosReais, error: dbError } = await supabase
+      .from("products")
+      .select("id, name, price")
+      .in("id", productIds);
+
+    if (dbError || !produtosReais || produtosReais.length === 0) {
+      console.error("Erro ao buscar produtos no Supabase:", dbError);
+      return NextResponse.json(
+        { error: "Erro ao validar os produtos no banco de dados." },
+        { status: 500 }
+      );
+    }
+
     let totalGeral = 0;
     const itensProcessados = [];
 
-    // LÓGICA DE SEGURANÇA: Validar os preços direto do servidor (JSON/Banco)
-    for (const itemCard of body) {
-      // Busca o produto real no "banco" para garantir que o usuário não alterou o preço no inspecionar elemento
-      const produtoReal = productsData.find((p) => p.id === itemCard.id);
+    // 3. LÓGICA DE SEGURANÇA: Cruza os dados do carrinho com os valores reais da nuvem
+    for (const itemCarrinho of body) {
+      const produtoBanco = produtosReais.find((p) => p.id === itemCarrinho.id);
 
-      if (!produtoReal) {
+      if (!produtoBanco) {
         return NextResponse.json(
-          { error: `Produto com ID ${itemCard.id} não foi encontrado.` },
+          { error: `O produto com ID ${itemCarrinho.id} não existe no catálogo.` },
           { status: 404 }
         );
       }
 
-      const subtotalItem = produtoReal.price * itemCard.quantity;
+      const precoReal = Number(produtoBanco.price);
+      const subtotalItem = precoReal * itemCarrinho.quantity;
       totalGeral += subtotalItem;
 
       itensProcessados.push({
-        id: produtoReal.id,
-        nome: produtoReal.name,
-        quantidade: itemCard.quantity,
-        precoUnitario: produtoReal.price,
+        id: produtoBanco.id,
+        name: produtoBanco.name,
+        quantity: itemCarrinho.quantity,
+        unitPrice: precoReal,
         subtotal: subtotalItem,
       });
     }
 
-    // SIMULAÇÃO DE INTEGRAÇÃO COM GATEWAY (Stripe / Mercado Pago)
-    // Aqui enviaríamos os 'itensProcessados' para a API deles e receberíamos a URL de pagamento
+    // Link fictício do gateway de pagamento (ex: Stripe/MercadoPago)
     const urlPagamentoSimulada = `https://checkout.stripe.com/pay/simulado_${Math.random().toString(36).substring(7)}`;
 
-    // Retorna a resposta de sucesso para o front-end
+    // 4. SALVAR NO BANCO DE DADOS: Cria o registro do pedido na tabela 'orders' como 'pending'
+    const { error: orderError } = await supabase
+      .from("orders")
+      .insert([
+        {
+          total_amount: totalGeral,
+          status: "pending",
+          items: itensProcessados, // O PostgreSQL guarda o array inteiro como JSONB perfeitamente
+          payment_url: urlPagamentoSimulada
+        }
+      ]);
+
+    if (orderError) {
+      console.error("Erro ao registrar pedido no Supabase:", orderError);
+      return NextResponse.json(
+        { error: "Erro interno ao salvar o pedido no banco de dados." },
+        { status: 500 }
+      );
+    }
+
+    // Retorna a resposta de sucesso completa para o front-end
     return NextResponse.json({
       success: true,
-      message: "Sessão de checkout criada com sucesso!",
+      message: "Pedido registrado e checkout criado!",
       total: totalGeral,
       products: itensProcessados,
-      paymentUrl: urlPagamentoSimulada, // O link para onde vamos redirecionar o cliente
+      paymentUrl: urlPagamentoSimulada,
     });
 
   } catch (error) {
-    console.error("Erro no checkout:", error);
+    console.error("Erro crítico no checkout:", error);
     return NextResponse.json(
-      { error: "Erro interno ao processar o checkout." },
+      { error: "Erro interno ao processar a requisição de checkout." },
       { status: 500 }
     );
   }
