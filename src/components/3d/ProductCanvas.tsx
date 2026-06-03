@@ -4,13 +4,24 @@ import React, { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Stage, useGLTF } from "@react-three/drei";
 
-// Componente interno que carrega o arquivo do modelo 3D
+// Componente interno ajustado para alinhar o fone corretamente
 function Model() {
-  // Carrega o fone que colocamos na pasta public
   const { scene } = useGLTF("/models/headphone.glb");
   
-  // Ajusta a escala e rotação inicial se necessário
-  return <primitive object={scene} scale={1.5} />;
+  return (
+    <primitive 
+      object={scene} 
+      // 1. Reduzimos um pouco para ele não ficar gigante (mude de 1.5 para 0.8 ou ajuste conforme necessário)
+      scale={0.8} 
+      
+      // 2. Afastamos ele um pouco para cima do chão para a sombra fazer sentido
+      position={[0, 0.2, 0]} 
+      
+      // 3. Aqui está o segredo: rotacionamos no eixo X (primeiro valor) para desvirar ele de ponta-cabeça
+      // Valores em radianos: Math.PI seria 180 graus. Vamos testar virar ele.
+      rotation={[0, -0.5, 0]} 
+    />
+  );
 }
 
 export default function ProductCanvas() {
