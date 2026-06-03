@@ -2,24 +2,23 @@
 
 import React, { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Stage, useGLTF } from "@react-three/drei";
+import { OrbitControls, useGLTF } from "@react-three/drei";
 
-// Componente interno ajustado para alinhar o fone corretamente
+// Componente interno com rotação forçada para desvirar o fone
 function Model() {
   const { scene } = useGLTF("/models/headphone.glb");
   
   return (
     <primitive 
       object={scene} 
-      // 1. Reduzimos um pouco para ele não ficar gigante (mude de 1.5 para 0.8 ou ajuste conforme necessário)
-      scale={0.8} 
+      // 1. Deixamos um tamanho controlado manualmente
+      scale={1.3} 
       
-      // 2. Afastamos ele um pouco para cima do chão para a sombra fazer sentido
-      position={[0, 0.2, 0]} 
+      // 2. Centraliza o fone no meio do espaço branco
+      position={[0, 0, 0]} 
       
-      // 3. Aqui está o segredo: rotacionamos no eixo X (primeiro valor) para desvirar ele de ponta-cabeça
-      // Valores em radianos: Math.PI seria 180 graus. Vamos testar virar ele.
-      rotation={[0, -0.5, 0]} 
+      // 3. O PULO DO GATO: Rotacionamos 180 graus no eixo X (3.14 radianos) para desvirar ele de ponta-cabeça
+      rotation={[3.14, 0, 0]} 
     />
   );
 }
@@ -28,36 +27,28 @@ export default function ProductCanvas() {
   return (
     <div className="w-full h-full cursor-grab active:cursor-grabbing">
       <Canvas 
-        camera={{ position: [0, 0, 4], fov: 45 }}
-        dpr={[1, 2]} // Melhora a nitidez em telas Retina
+        camera={{ position: [0, 0, 5], fov: 45 }}
+        dpr={[1, 2]}
       >
-        {/* Luz ambiente suave */}
-        <ambientLight intensity={0.7} />
-        {/* Luz direcional para dar sombras e reflexos realistas */}
-        <directionalLight position={[5, 5, 5]} intensity={1.5} castShadow />
-        <pointLight position={[-5, -5, -5]} intensity={0.5} />
+        {/* Iluminação manual de estúdio para o fone brilhar */}
+        <ambientLight intensity={1.5} />
+        <directionalLight position={[5, 5, 5]} intensity={2} />
+        <directionalLight position={[-5, 5, -5]} intensity={1} />
+        <pointLight position={[0, -3, 2]} intensity={0.5} />
 
         <Suspense fallback={null}>
-          {/* 
-            CORREÇÃO AQUI: Mudamos 'contactShadows={{...}}' para 'shadows="contact"'. 
-            Isso ativa as sombras suaves do Stage sem quebrar a tipagem do TypeScript.
-          */}
-          <Stage environment="city" intensity={0.6} shadows="contact">
-            <Model />
-          </Stage>
+          <Model />
         </Suspense>
 
-        {/* Permite o usuário girar o modelo com o mouse, mas trava o zoom para não quebrar o layout */}
+        {/* Controles do mouse com rotação automática bem suave */}
         <OrbitControls 
           enableZoom={false} 
           autoRotate 
           autoRotateSpeed={0.5}
-          makeDefault 
         />
       </Canvas>
     </div>
   );
 }
 
-// Pré-carrega o modelo para evitar delays quando a página abrir
 useGLTF.preload("/models/headphone.glb");
