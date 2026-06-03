@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useCart } from "../context/CartContext";
 
 interface CartDrawerProps {
@@ -10,6 +10,54 @@ interface CartDrawerProps {
 
 export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const { cart, cartTotal, updateQuantity, removeFromCart } = useCart();
+  const [loading, setLoading] = useState(false); // Estado para desabilitar o botão enquanto a API processa
+
+  // Função que dispara os dados para a nossa rota de API
+  const handleCheckout = async () => {
+    if (cart.length === 0) return;
+    
+    setLoading(true);
+    try {
+      // Mapeia o carrinho para enviar apenas o ID e a Quantidade (Boa prática de segurança)
+      const itemsToPay = cart.map((item) => ({
+        id: item.product.id,
+        quantity: item.quantity,
+      }));
+
+      // Faz a requisição HTTP POST para a rota interna do Next.js
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(itemsToPay),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || "Erro ao processar compra.");
+        setLoading(false);
+        return;
+      }
+
+      // Alerta de sucesso mostrando o retorno do servidor back-end
+      alert(
+        `Checkout Gerado no Servidor!\n` +
+        `Total Validado: R$ ${data.total.toFixed(2)}\n\n` +
+        `Redirecionando para o Gateway simulado:\n${data.paymentUrl}`
+      );
+
+      // Em um ambiente de produção real com o Stripe/Mercado Pago ativo, você faria:
+      // window.location.href = data.paymentUrl;
+
+    } catch (err) {
+      console.error("Erro na requisição:", err);
+      alert("Erro ao conectar com o servidor.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -98,8 +146,12 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 <span>{cartTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
               </div>
               <p className="text-xs text-slate-400">Frete e impostos calculados no checkout fictício.</p>
-              <button className="w-full bg-slate-950 text-white py-3.5 rounded-full font-semibold hover:bg-slate-900 transition active:scale-98 shadow-md">
-                Finalizar Compra (Demonstração)
+              <button 
+                onClick={handleCheckout}
+                disabled={loading}
+                className="w-full bg-slate-950 text-white py-3.5 rounded-full font-semibold hover:bg-slate-900 transition active:scale-98 shadow-md disabled:bg-slate-400 disabled:cursor-not-allowed"
+              >
+                {loading ? "Processando..." : "Finalizar Compra (API Server)"}
               </button>
             </div>
           )}
