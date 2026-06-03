@@ -1,5 +1,16 @@
 @import "tailwindcss";
 
+@theme {
+  /* Registra a fonte geométrica pesada para títulos (Streetwear/Tech) */
+  --font-title: var(--font-syne), sans-serif;
+  
+  /* Registra a fonte limpa para textos (Premium/Minimalista) */
+  --font-sans: var(--font-jakarta), sans-serif;
+
+  /* Registra a nossa cor de destaque Laranja Ácido */
+  --color-wonder: #ff5722;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;

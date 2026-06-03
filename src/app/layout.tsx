@@ -1,22 +1,28 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Syne, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import { CartProvider } from "../context/CartContext";
-import Navbar from "../components/Navbar"; // <-- Importando aqui
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+import { CartProvider } from "./context/CartContext";
+import Navbar from "../components/Navbar";
+import CartDrawer from "./ui/CartDrawer"; // 
+
+// Configuração da fonte dos títulos (Streetwear / Tech Impact)
+const syne = Syne({
   subsets: ["latin"],
+  variable: "--font-syne",
+  weight: ["700", "800"], // Pesos pesados para títulos marcantes
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+// Configuração da fonte do texto (Premium / Minimalista)
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
+  variable: "--font-jakarta",
+  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
-  title: "Premium E-Commerce 3D",
-  description: "Loja conceito interativa para demonstração de projetos.",
+  title: "PHLOX | Premium 3D E-Commerce",
+  description: "Fones de ouvido de alta performance com tecnologia de ponta.",
 };
 
 export default function RootLayout({
@@ -25,10 +31,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-slate-900`}>
+    <html lang="pt-BR" className={`${syne.variable} ${plusJakartaSans.variable}`}>
+      <body className="bg-neutral-950 text-white antialiased font-sans">
         <CartProvider>
-          <Navbar /> {/* <-- Adicionado acima dos filhos para ficar fixo no topo */}
+          <Navbar />
+          <CartDrawer /> {/* ⚡ Agora o carrinho escuta o contexto globalmente */}
           {children}
         </CartProvider>
       </body>
