@@ -2,6 +2,7 @@
 
 import { useCart } from "../context/CartContext";
 import { useState } from "react";
+import { trackEvent } from "../../lib/analytics";
 
 interface ProductCardProps {
   product: {
@@ -21,6 +22,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const [isAdding, setIsAdding] = useState(false);
 
   const handleAddToCart = () => {
+    trackEvent("click_buy", window.location.pathname, product.name);
     setIsAdding(true);
     
     addToCart({

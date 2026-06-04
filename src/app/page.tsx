@@ -5,6 +5,7 @@ import { useCart } from "./context/CartContext";
 import ProductCanvas from "../components/3d/ProductCanvas";
 import { supabase } from "../lib/supabase";
 import Link from "next/link";
+import { trackEvent } from "../lib/analytics";
 
 // Definição da interface para os produtos vindo do banco
 interface DatabaseProduct {
@@ -42,6 +43,7 @@ export default function Home() {
     }
 
     fetchMainProduct();
+    trackEvent("page_view", window.location.pathname);
   }, []);
 
   // Adaptador simples para transformar o padrão do banco no formato que o Contexto do carrinho já aceita

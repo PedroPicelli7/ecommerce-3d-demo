@@ -1,17 +1,34 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
-// Criamos o contexto do zero
 const CartContext = createContext<any>(null);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
+  // Inicializa o carrinho vazio de forma segura
   const [cart, setCart] = useState<any[]>([]);
-  
-  // Criamos o estado único de abertura da gaveta lateral
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Adicionar item ao carrinho
+  // 1. Carrega os dados do localStorage apenas quando o componente monta no navegador
+  useEffect(() => {
+    const savedCart = localStorage.getItem("phlox_cart");
+    if (savedCart) {
+      try {
+        setCart(JSON.parse(savedCart));
+      } catch (e) {
+        console.error("Erro ao ler o carrinho do localStorage", e);
+      }
+    }
+  }, []);
+
+  // 2. Salva no localStorage automaticamente toda vez que o estado do 'cart' mudar
+  useEffect(() => {
+    // Evita resetar o localStorage se o app ainda estiver carregando o estado inicial
+    if (cart.length > 0 || localStorage.getItem("phlox_cart")) {
+      localStorage.setItem("phlox_cart", JSON.stringify(cart));
+    }
+  }, [cart]);
+
   const addToCart = (product: any) => {
     setCart((prevCart) => {
       const existingProduct = prevCart.find((item) => item.id === product.id);
@@ -24,20 +41,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  // Função alternativa para alternar o estado de abrir/fechar
   const toggleCart = () => setIsCartOpen((prev) => !prev);
 
   return (
     <CartContext.Provider
       value={{
         cart,
+        setCart,
         addToCart,
-        
-        // Mapeamos o mesmo estado e funções para todas as variações que criamos nos outros arquivos
         isCartOpen,
         isDrawerOpen: isCartOpen, 
         isOpen: isCartOpen,
-        
         setIsCartOpen,
         setIsDrawerOpen: setIsCartOpen,
         toggleCart
@@ -48,11 +62,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Hook customizado seguro
 export function useCart() {
-  const context = useContext(CartContext);
-  if (!context) {
-    throw new Error("useCart deve ser usado dentro de um CartProvider");
-  }
-  return context;
+  return useContext(CartContext);
 }
