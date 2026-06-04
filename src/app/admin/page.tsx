@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "../../lib/supabase";
+// 🌟 CAMINHO DA IMPORTAÇÃO CONFIRMADO PELA SUA ÁRVORE DE ARQUIVOS
+import { supabase } from "../../lib/supabase"; 
 import { useRouter } from "next/navigation";
 import { 
   LayoutDashboard, 
@@ -58,23 +59,37 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     const checkAdminAndFetchData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
 
-      if (!user) {
-        router.push("/login?message=Faça login para acessar esta área.");
-        return;
+        if (!user) {
+          router.push("/login?message=Faça login para acessar esta área.");
+          return;
+        }
+
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+
+        // Se houver erro de requisição ou o usuário logado não for admin, desvia a rota
+        if (error || profile?.role !== "admin") {
+          router.push("/shop");
+          return;
+        }
+
+        // Se passar nas validações com sucesso, alimenta os estados do painel
+        await fetchProducts();
+        await fetchAnalytics();
+        
+      } catch (err) {
+        console.error("Erro crítico de validação no nó administrativo:", err);
+        router.push("/shop"); // Desvia para o catálogo em caso de colapso de rede
+      } finally {
+        // 🔒 BLINDAGEM: Garante o fim do carregamento infinito independente de oscilações da API
+        setLoading(false);
       }
-
-      const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-
-      if (profile?.role !== "admin") {
-        router.push("/shop");
-        return;
-      }
-
-      await fetchProducts();
-      await fetchAnalytics();
-      setLoading(false);
     };
 
     checkAdminAndFetchData();
@@ -218,7 +233,7 @@ export default function AdminDashboard() {
         </aside>
       </div>
 
-      {/* 🖥️ ÁREA DE CONTEÚDO PRINCIPAL (Ocupa 100% da largura, com um pt/pl ajustado por causa do botão flutuante) */}
+      {/* 🖥️ ÁREA DE CONTEÚDO PRINCIPAL */}
       <div className="p-8 lg:p-12 pt-16 max-w-7xl mx-auto overflow-x-hidden">
         
         {/* ================= ABA 1: LIVE ANALYTICS ================= */}
