@@ -20,6 +20,22 @@ function LoginFormContent() {
     if (msg) setMessage(msg);
   }, [searchParams]);
 
+  const handleGoogleLogin = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          // A URL para onde o Google vai devolver o usuário logado
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) throw error;
+    } catch (err) {
+      console.error("Erro ao autenticar com o Google:", err);
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -70,7 +86,7 @@ function LoginFormContent() {
       {error && (
         <div className="bg-red-900/30 border border-red-800 text-red-400 p-3 rounded-xl text-sm mb-4">
           {error}
-          </div>
+        </div>
       )}
 
       <form onSubmit={handleLogin} className="space-y-4">
@@ -109,6 +125,14 @@ function LoginFormContent() {
         >
           {loading ? "Autenticando..." : "Entrar"}
         </button>
+        <button
+          onClick={handleGoogleLogin}
+          type="button"
+          className="w-full flex items-center justify-center gap-3 bg-neutral-900 border border-neutral-800 text-white font-semibold py-3 rounded-xl text-sm hover:bg-neutral-800 transition-all cursor-pointer"
+        >
+          {/* Ícone ou SVG do Google aqui */}
+          <span>Continuar com o Google</span>
+        </button>
       </form>
 
       <p className="text-neutral-500 text-xs text-center mt-6">
@@ -125,9 +149,13 @@ function LoginFormContent() {
 export default function LoginPage() {
   return (
     <main className="min-h-screen bg-neutral-950 text-white flex items-center justify-center p-4 pt-24">
-      <Suspense fallback={
-        <div className="text-neutral-400 text-sm animate-pulse">Carregando formulário...</div>
-      }>
+      <Suspense
+        fallback={
+          <div className="text-neutral-400 text-sm animate-pulse">
+            Carregando formulário...
+          </div>
+        }
+      >
         <LoginFormContent />
       </Suspense>
     </main>
