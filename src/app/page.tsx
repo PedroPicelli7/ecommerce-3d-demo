@@ -1,5 +1,5 @@
 "use client";
-
+export const dynamic = "force-dynamic";
 import React, { useEffect, useState } from "react";
 import { useCart } from "./context/CartContext";
 import ProductCanvas from "../components/3d/ProductCanvas";
