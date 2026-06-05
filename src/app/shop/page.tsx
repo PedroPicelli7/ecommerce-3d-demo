@@ -1,4 +1,4 @@
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../lib/supabase";
 import ProductCard from "../ui/ProductCard";
 
 // Força o Next.js a buscar dados novos do banco a cada requisição

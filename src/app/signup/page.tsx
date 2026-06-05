@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 // 🌟 CAMINHO DA IMPORTAÇÃO CONSOLIDADO PELA ÁRVORE DE DIRETÓRIOS
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../lib/supabase";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 

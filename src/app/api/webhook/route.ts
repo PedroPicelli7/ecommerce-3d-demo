@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabase } from "../../../lib/supabase";
+import { supabase } from "../../lib/supabase";
 
 export async function POST(request: Request) {
     console.log("Cenário de Depuração -> URL do Supabase:", process.env.NEXT_PUBLIC_SUPABASE_URL);

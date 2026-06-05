@@ -3,9 +3,9 @@
 import React, { useEffect, useState } from "react";
 import { useCart } from "./context/CartContext";
 import ProductCanvas from "../components/3d/ProductCanvas";
-import { supabase } from "../lib/supabase";
+import { supabase } from "./lib/supabase";
 import Link from "next/link";
-import { trackEvent } from "../lib/analytics";
+import { trackEvent } from "./lib/analytics";
 
 // Definição da interface para os produtos vindo do banco
 interface DatabaseProduct {

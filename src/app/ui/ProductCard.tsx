@@ -2,7 +2,7 @@
 
 import { useCart } from "../context/CartContext";
 import { useState } from "react";
-import { trackEvent } from "../../lib/analytics";
+import { trackEvent } from "../lib/analytics";
 
 interface ProductCardProps {
   product: {

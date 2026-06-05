@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 // 🌟 CAMINHO DA IMPORTAÇÃO CONFIRMADO PELA SUA ÁRVORE DE ARQUIVOS
-import { supabase } from "../../lib/supabase"; 
+import { supabase } from "../lib/supabase"; 
 import { useRouter } from "next/navigation";
 import { 
   LayoutDashboard, 

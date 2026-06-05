@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../app/lib/supabase";
 import { useRouter } from "next/navigation";
 import { useCart } from "../app/context/CartContext"; // Importa o contexto do carrinho
 import { Menu, X, ShoppingBag } from "lucide-react"; // Ícones limpos e modernos
