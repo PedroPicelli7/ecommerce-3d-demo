@@ -2,10 +2,22 @@
 
 import React, { useEffect, useState } from "react";
 import { useCart } from "./context/CartContext";
-import ProductCanvas from "../components/3d/ProductCanvas";
+import dynamic from "next/dynamic";
 import { supabase } from "./lib/supabase";
 import Link from "next/link";
 import { trackEvent } from "./lib/analytics";
+
+// ⚡ PASSO 1: Carregamento Assíncrono do Canvas 3D (Code Splitting)
+// Isso impede que o peso do Three.js trave o carregamento inicial da página no Mobile.
+const ProductCanvas = dynamic(() => import("../components/3d/ProductCanvas"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full flex flex-col items-center justify-center font-sans text-neutral-600 gap-2">
+      <div className="w-4 h-4 border border-neutral-700 border-t-neutral-400 rounded-full animate-spin"></div>
+      <p className="text-[10px] tracking-widest uppercase animate-pulse">Carregando Core 3D...</p>
+    </div>
+  ),
+});
 
 // Definição da interface para os produtos vindo do banco
 interface DatabaseProduct {
@@ -154,7 +166,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Container para o Modelo 3D Interativo */}
+        {/* Container para o Modelo 3D Interativo (Importado Dinamicamente) */}
         <div className="md:col-span-6 w-full h-[350px] sm:h-[450px] lg:h-[550px] order-1 md:order-2 relative flex items-center justify-center cursor-grab active:cursor-grabbing">
           <ProductCanvas />
         </div>
@@ -186,7 +198,7 @@ export default function Home() {
 
           <div className="bg-gradient-to-br from-neutral-900 to-neutral-950 border border-neutral-800 p-8 rounded-2xl h-64 sm:col-span-2 flex flex-col justify-between shadow-xl">
             <div>
-              <span className="text-xs font-semibold text-neutral-400 uppercase tracking-widest font-sans">Trend</span>
+              <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider font-sans">Trend</span>
               <h3 className="text-3xl font-black font-title mt-2 uppercase tracking-tight text-white">Devices Laptop</h3>
             </div>
             <Link href="/shop" className="bg-white text-black text-xs font-bold px-6 py-3 rounded-xl w-max hover:bg-neutral-200 transition font-sans text-center shadow-lg">
