@@ -31,6 +31,9 @@ export default function CartDrawer() {
   });
   const [isApplying, setIsApplying] = useState(false);
 
+  // ⚡ Estado para controlar o loading do envio ao Mercado Pago
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
+
   const shouldShow = isCartOpen || isDrawerOpen || isOpen;
 
   const handleClose = () => {
@@ -67,6 +70,36 @@ export default function CartDrawer() {
   const handleRemoveCoupon = () => {
     removeCoupon();
     setCouponMessage({ status: null, text: "" });
+  };
+
+  // 🔗 Função Real para enviar os dados para a API e redirecionar para o Mercado Pago
+  const handleCheckoutSubmit = async () => {
+    try {
+      setIsCheckoutLoading(true);
+      
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: cart.map((item: any) => ({ id: item.id, quantity: item.quantity })),
+          couponCode: appliedCoupon?.code || null
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.paymentUrl) {
+        // Envia o usuário direto para a tela de pagamento seguro do Mercado Pago
+        window.location.href = data.paymentUrl;
+      } else {
+        alert(data.error || "Falha ao gerar o link de pagamento.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Erro na conexão com o servidor de pagamento.");
+    } finally {
+      setIsCheckoutLoading(false);
+    }
   };
 
   if (!shouldShow) return null;
@@ -226,12 +259,13 @@ export default function CartDrawer() {
               Taxas de envio adicionais serão calculadas na próxima etapa do checkout.
             </p>
 
-            {/* Botão de Finalização */}
+            {/* ⚡ BOTÃO DE FINALIZAÇÃO REAL CONECTADO AO MERCADO PAGO */}
             <button 
-              onClick={() => alert(`Checkout iniciado! Valor Final: ${totalWithDiscount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`)}
-              className="w-full bg-white text-black font-bold font-sans text-sm py-4 rounded-xl text-center hover:bg-neutral-200 transition-all active:scale-95 shadow-xl shadow-white/5 cursor-pointer block"
+              onClick={handleCheckoutSubmit}
+              disabled={isCheckoutLoading}
+              className="w-full bg-white text-black font-bold font-sans text-sm py-4 rounded-xl text-center hover:bg-neutral-200 transition-all active:scale-95 shadow-xl shadow-white/5 cursor-pointer block disabled:opacity-50"
             >
-              Finalizar Compra ⚡
+              {isCheckoutLoading ? "Processando Pedido... ⚡" : "Finalizar Compra ⚡"}
             </button>
           </div>
         )}
