@@ -1,74 +1,85 @@
 import { NextResponse } from "next/server";
 import { supabase } from "../../lib/supabase";
+import { MercadoPagoConfig, Payment } from "mercadopago";
+
+// Inicializa o Mercado Pago no servidor
+const client = new MercadoPagoConfig({
+  accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN || "",
+});
 
 export async function POST(request: Request) {
-    console.log("Cenário de Depuração -> URL do Supabase:", process.env.NEXT_PUBLIC_SUPABASE_URL);
   try {
-    const body = await request.json();
+    // O Mercado Pago pode enviar dados via Query Params (?id=...&type=...) ou no Body JSON
+    const { searchParams } = new URL(request.url);
+    const idParam = searchParams.get("data.id") || searchParams.get("id");
+    const typeParam = searchParams.get("type");
 
-    // Em uma integração real (ex: Stripe), aqui leríamos o cabeçalho 'stripe-signature'
-    // para garantir que a requisição veio mesmo do Stripe e não de um hacker simulando um pagamento.
-    
-    const { orderId, eventType } = body;
-
-    if (!orderId || !eventType) {
-      return NextResponse.json(
-        { error: "Dados do evento incompletos." },
-        { status: 400 }
-      );
+    // Lendo também o corpo, caso venha no formato alternativo JSON
+    let body: any = {};
+    try {
+      body = await request.json();
+    } catch (e) {
+      // Corpo vazio ou não-JSON (comum em alguns pings de teste)
     }
 
-    // Só vamos processar se o evento for de sucesso no pagamento
-    if (eventType === "payment.success") {
+    // Consolida o ID do pagamento e o tipo do evento vindo do Mercado Pago
+    const paymentId = idParam || (body.data && body.data.id);
+    const actionType = typeParam || body.type;
+
+    // Se não for um evento de pagamento, ignoramos (o Mercado Pago avisa sobre outras coisas)
+    if (actionType !== "payment" || !paymentId) {
+      return NextResponse.json({ message: "Evento ignorado. Apenas monitoramos 'payment'." });
+    }
+
+    // 1. Consulta o Mercado Pago para obter os detalhes REAIS do pagamento (Evita Fraudes)
+    const paymentClient = new Payment(client);
+    const paymentData = await paymentClient.get({ id: Number(paymentId) });
+
+    // O status do pagamento pode ser: approved, pending, in_process, rejected, etc.
+    const paymentStatus = (paymentData as any).status;
+    const preferenceId = (paymentData as any).preference_id;
+    if (!preferenceId) {
+      return NextResponse.json({ error: "Preference ID não encontrado no pagamento." }, { status: 400 });
+    }
+
+    // 2. Se o pagamento foi aprovado (Pix pago ou Cartão autorizado)
+    if (paymentStatus === "approved") {
       
-      // 1. Verificar se o pedido realmente existe antes de atualizar
+      // Busca o pedido correspondente no Supabase usando o ID da preferência do Mercado Pago
       const { data: pedido, error: searchError } = await supabase
         .from("orders")
         .select("id, status")
-        .eq("id", orderId)
+        .eq("mp_preference_id", preferenceId)
         .single();
 
       if (searchError || !pedido) {
-        return NextResponse.json(
-          { error: "Pedido não encontrado no banco de dados." },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: "Pedido correspondente não localizado no Supabase." }, { status: 404 });
       }
 
-      // 2. EVITAR RETRABALHO: Se já estiver pago, ignora para não rodar duas vezes à toa
+      // Se o pedido já constar como pago, finaliza o processo
       if (pedido.status === "paid") {
-        return NextResponse.json({ message: "O pedido já estava marcado como pago." });
+        return NextResponse.json({ message: "O pedido já constava como pago no banco de dados." });
       }
 
-      // 3. ATUALIZAÇÃO NO BANCO: Muda o status para 'paid'
+      // 3. Atualiza o status do pedido para 'paid'
       const { error: updateError } = await supabase
         .from("orders")
         .update({ status: "paid" })
-        .eq("id", orderId);
+        .eq("id", pedido.id);
 
       if (updateError) {
-        console.error("Erro ao atualizar o status do pedido:", updateError);
-        return NextResponse.json(
-          { error: "Erro interno ao atualizar status do pedido." },
-          { status: 500 }
-        );
+        console.error("Erro ao atualizar status do pedido:", updateError);
+        return NextResponse.json({ error: "Erro ao salvar status de pago no banco." }, { status: 500 });
       }
 
-      console.log(`🚀 Pedido ${orderId} atualizado para PAGO com sucesso!`);
-      
-      return NextResponse.json({
-        success: true,
-        message: `Status do pedido ${orderId} atualizado com sucesso para 'paid'.`
-      });
+      console.log(`🚀 Pedido ${pedido.id} liquidado com sucesso via Webhook!`);
+      return NextResponse.json({ success: true, message: "Pedido atualizado para pago." });
     }
 
-    return NextResponse.json({ message: "Evento recebido, mas nenhuma ação era necessária." });
+    return NextResponse.json({ message: `Evento processado. Status atual do pagamento: ${paymentStatus}` });
 
   } catch (error) {
-    console.error("Erro crítico no webhook:", error);
-    return NextResponse.json(
-      { error: "Erro interno no servidor ao processar o webhook." },
-      { status: 500 }
-    );
+    console.error("Erro crítico no processamento do Webhook:", error);
+    return NextResponse.json({ error: "Erro interno no servidor do webhook." }, { status: 500 });
   }
 }
