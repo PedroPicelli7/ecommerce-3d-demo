@@ -12,9 +12,16 @@ import { trackEvent } from "./lib/analytics";
 const ProductCanvas = dynamic(() => import("../components/3d/ProductCanvas"), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-full flex flex-col items-center justify-center font-sans text-neutral-600 gap-2">
-      <div className="w-4 h-4 border border-neutral-700 border-t-neutral-400 rounded-full animate-spin"></div>
-      <p className="text-[10px] tracking-widest uppercase animate-pulse">Carregando Core 3D...</p>
+    <div className="w-full h-full relative flex items-center justify-center animate-pulse">
+      {/* Imagem estática leve do fone que aparece no primeiro milissegundo */}
+      <img 
+        src="/images/beats-main.png" 
+        alt="Carregando PHLOX 3D..." 
+        className="object-contain max-h-[80%] opacity-40 blur-[2px] select-none pointer-events-none"
+      />
+      <div className="absolute bottom-4 bg-neutral-900/60 border border-neutral-800/40 px-3 py-1 rounded-full text-[9px] tracking-widest uppercase text-neutral-400 font-sans">
+        Ativando Óptica 3D...
+      </div>
     </div>
   ),
 });
